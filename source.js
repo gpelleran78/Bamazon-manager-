@@ -9,34 +9,91 @@ const connection = mysql.createConnection({
     database: "bamazon_db"
 });
 
-let makeTable = function(){
-    connection.query("SELECT * FROM products", function(err,res){
+let makeTable = function () {
+    connection.query("SELECT * FROM products", function (err, res) {
         if (err) throw err;
         console.log("ItemID\tProduct Name\tDepartment Name\tPrice\tNumber in Stock");
         console.log("====================================================================================");
-        for(var i=0; i<res.length; i++){
-            console.log(res[i].item_id+"\t"+res[i].product_name+"\t"+res[i].department_name+"\t"+res[i].price+"\t"+res[i].stock_quanity);
+        for (var i = 0; i < res.length; i++) {
+            console.log(res[i].item_id + "\t" + res[i].product_name + "\t" + res[i].department_name + "\t" + res[i].price + "\t" + res[i].stock_quanity);
         }
         console.log("====================================================================================");
         promptManager(res);
     })
-    
+
 }
 
-var promptManager = function(){
+let promptManager = function () {
     inquirer.prompt([{
         type: "rawlist",
         name: "choice",
         message: "What would you like to do?",
         choices: ["Add new item", "Add quanity to an existing item"]
-    }]).then(function(val){
-        if(val.choice == "Add new item"){
+    }]).then(function (val) {
+        if (val.choice == "Add new item") {
             addItem();
         }
-        if(val.choice == "Add quanity to an existing item"){
+        if (val.choice == "Add quantity to an existing item") {
             addQuanity(res);
         }
     })
 }
 
+function addItem() {
+    inquirer.prompt([{
+        type: "input",
+        name: "product_name",
+        message: "What is the name of the product?"
+    }, {
+        type: "input",
+        name: "department_name",
+        message: "What department does this product fit into?"
+    }, {
+        type: "input",
+        name: "price",
+        message: "What is the price of the item"
+    }, {
+        type: "input",
+        name: "quantity",
+        message: "How many items are available for to be stocked?"
+    }]).then(function (val) {
+        connection.query("INSERT INTO products (product_name, department_name, price, stock_quanity) VALUE ('" + val.product_name + "' , '"
+            + val.department_name + "', " + val.price + "', " + val.stock_quanity + ");", function (err, res
+            ) {
+            if (err) throw err;
+            console.log(val.product_name + " ADDED TO BAMAZON!!!");
+            makeTable();
+        });
+    });
+};
+
+
+function addQuanity() {
+    inquirer.prompt([{
+        type: "input",
+        name: "product_name",
+        message: "What product wouold you like to update?"
+    }, {
+        type: "input",
+        name: "added",
+        message: "How much stock will be added?"
+    }]).then(function(val){
+        for(i=0; i<res.length; i++){
+            if(res[i].product_name == val.product_name){
+                connection.query('UPDATE products SET stock_quanity=stock_quanity+'+val.added+
+                'WHERE item_id='+res[i].item_id+';', function(err,res){
+                    if(err) throw err;
+                    if(res.affectedRows == 0){
+                        console.log("That item does not exist, Try selecting a different item.");
+                        makeTable();
+                    }else {
+                        console.log("Items have been added into your Inventory");
+                        makeTable();
+                    }
+                });
+            }
+        }
+    });
+}
+  
 makeTable();
