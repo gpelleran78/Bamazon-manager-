@@ -23,17 +23,17 @@ let makeTable = function () {
 
 }
 
-let promptManager = function () {
+let promptManager = function (res) {
     inquirer.prompt([{
         type: "rawlist",
         name: "choice",
         message: "What would you like to do?",
-        choices: ["Add new item", "Add quanity to an existing item"]
+        choices: ["Add new item", "Add quanity"]
     }]).then(function (val) {
         if (val.choice == "Add new item") {
             addItem();
         }
-        if (val.choice == "Add quantity to an existing item") {
+        if (val.choice == "Add quanity") {
             addQuanity(res);
         }
     })
@@ -54,12 +54,13 @@ function addItem() {
         message: "What is the price of the item"
     }, {
         type: "input",
-        name: "quantity",
+        name: "stock_quanity",
         message: "How many items are available for to be stocked?"
     }]).then(function (val) {
-        connection.query("INSERT INTO products (product_name, department_name, price, stock_quanity) VALUE ('" + val.product_name + "' , '"
-            + val.department_name + "', " + val.price + "', " + val.stock_quanity + ");", function (err, res
-            ) {
+        connection.query(
+            `INSERT INTO products(product_name, department_name, price, stock_quanity) 
+            VALUES ('${val.product_name}', '${val.department_name}', ${val.price}, ${val.stock_quanity})`, 
+            function (err, res) {
             if (err) throw err;
             console.log(val.product_name + " ADDED TO BAMAZON!!!");
             makeTable();
@@ -68,7 +69,7 @@ function addItem() {
 };
 
 
-function addQuanity() {
+function addQuanity(res) {
     inquirer.prompt([{
         type: "input",
         name: "product_name",
